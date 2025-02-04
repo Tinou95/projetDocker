@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+
+  products:
+    build:
+      context: ./services/products
+      target: development
+    volumes:
+      - ./services/products:/app
+      - /app/node_modules
+    ports:
+      - "3001:3001"
+    environment:
+      - MONGO_URI=mongodb://products_db:27017/products
+      - NODE_ENV=development
+    depends_on:
+      - products_db
+
+  users:
+    build:
+      context: ./services/users
+      target: development
+    volumes:
+      - ./services/users:/app
+      - /app/node_modules
+    ports:
+      - "3002:3002"
+    environment:
+      - MONGO_URI=mongodb://users_db:27017/users
+      - JWT_SECRET=your_jwt_secret_key
+      - NODE_ENV=development
+    depends_on:
+      - users_db
+
+  cart:
+    build:
+      context: ./services/cart
+      target: development
+    volumes:
+      - ./services/cart:/app
+      - /app/node_modules
+    ports:
+      - "3003:3003"
+    environment:
+      - MONGO_URI=mongodb://cart_db:27017/cart
+      - NODE_ENV=development
+    depends_on:
+      - cart_db
+
+  products_db:
+    image: mongo:latest
+    volumes:
+      - products_data:/data/db
+    ports:
+      - "27017:27017"
+
+  users_db:
+    image: mongo:latest
+    volumes:
+      - users_data:/data/db
+    ports:
+      - "27018:27017"
+
+  cart_db:
+    image: mongo:latest
+    volumes:
+      - cart_data:/data/db
+    ports:
+      - "27019:27017"
+
+volumes:
+  products_data:
+  users_data:
+  cart_data:

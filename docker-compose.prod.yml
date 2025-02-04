@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+    ports:
+      - "80:80"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  products:
+    build:
+      context: ./services/products
+      target: production
+    ports:
+      - "3001:3001"
+    environment:
+      - MONGO_URI=mongodb://products_db:27017/products
+      - NODE_ENV=production
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    depends_on:
+      - products_db
+
+  users:
+    build:
+      context: ./services/users
+      target: production
+    ports:
+      - "3002:3002"
+    environment:
+      - MONGO_URI=mongodb://users_db:27017/users
+      - JWT_SECRET=${JWT_SECRET}
+      - NODE_ENV=production
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    depends_on:
+      - users_db
+
+  cart:
+    build:
+      context: ./services/cart
+      target: production
+    ports:
+      - "3003:3003"
+    environment:
+      - MONGO_URI=mongodb://cart_db:27017/cart
+      - NODE_ENV=production
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    depends_on:
+      - cart_db
+
+  products_db:
+    image: mongo:latest
+    volumes:
+      - products_data:/data/db
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  users_db:
+    image: mongo:latest
+    volumes:
+      - users_data:/data/db
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  cart_db:
+    image: mongo:latest
+    volumes:
+      - cart_data:/data/db
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+volumes:
+  products_data:
+  users_data:
+  cart_data:
